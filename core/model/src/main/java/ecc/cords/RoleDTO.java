@@ -45,7 +45,7 @@ public class RoleDTO {
 
 	@Override
 	public String toString() {
-		return roleId + ": " + roleName;
+		return roleName;
 	}
 
 	@Override

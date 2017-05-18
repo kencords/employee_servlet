@@ -11,6 +11,10 @@ public class Utils{
 		return new SimpleDateFormat("MMMM dd yyyy").format(date);
 	}
 
+	public static Date convertToDate(String date) throws Exception{
+		return new SimpleDateFormat("yyyy-MM-dd").parse(date);
+	}
+
 	public static boolean isValidDate(String date) {
 		Pattern pattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
 

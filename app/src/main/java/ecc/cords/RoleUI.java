@@ -29,11 +29,11 @@ public class RoleUI {
 			try {
 				switch(choice) {
 					case "1":
-						logMsg = EmployeeManager.createRole(InputHelper.askString("Enter Role Name: ", false).toUpperCase());
+						EmployeeManager.createRole(InputHelper.askString("Enter Role Name: ", false).toUpperCase());
 						break;
 					case "2":
 						role = EmployeeManager.getRole(InputHelper.askPositiveNumber("Enter Role ID: ", false));
-						logMsg = EmployeeManager.updateRole(role,InputHelper.askString("Enter Role Name: ", false).toUpperCase());
+						EmployeeManager.updateRole(role,InputHelper.askString("Enter Role Name: ", false).toUpperCase());
 						break;
 					case "3":
 						role = EmployeeManager.getRole(InputHelper.askPositiveNumber("Enter Role ID: ", false));

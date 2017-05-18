@@ -14,6 +14,10 @@
     <servlet-name>RoleServlet</servlet-name>
     <servlet-class>ecc.cords.RoleServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>EmployeeFormServlet</servlet-name>
+    <servlet-class>ecc.cords.EmployeeFormServlet</servlet-class>
+  </servlet>
  
   <servlet-mapping>
     <servlet-name>HomeServlet</servlet-name>
@@ -23,6 +27,9 @@
     <servlet-name>RoleServlet</servlet-name>
     <url-pattern>/roles</url-pattern>
   </servlet-mapping>
-   
+  <servlet-mapping>
+    <servlet-name>EmployeeFormServlet</servlet-name>
+    <url-pattern>/employeeForm</url-pattern>
+  </servlet-mapping>
  
 </web-app>

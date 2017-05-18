@@ -35,7 +35,8 @@ public class EmployeeUI {
 		employee.setCurrentlyHired(InputHelper.askBoolean("Is currently hired? (Y|N): "));
 		employee.setHireDate(InputHelper.askDate("Enter Date Hired (yyyy-mm-dd): "));
 		employee.setRoles(RoleUI.getInstance().askRoles());
-		return EmployeeManager.addEmployee(employee);
+		EmployeeManager.addEmployee(employee);
+		return "";
 	}
 
 	public AddressDTO askAddressDTO() {

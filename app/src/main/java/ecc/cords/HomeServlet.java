@@ -35,7 +35,11 @@ public class HomeServlet extends HttpServlet {
 			logMsgs.add(new LogMsg("Sorted By " + order, "green"));
 		}
 
-		if(req.getParameter("roleBtn") !=null) {
+		if(req.getParameter("addEmpBtn")!= null) {
+			res.sendRedirect("employeeForm");
+		}
+
+		if(req.getParameter("roleBtn") != null) {
 			res.sendRedirect("roles");
 		}
 
@@ -44,7 +48,7 @@ public class HomeServlet extends HttpServlet {
 		out.println(Template.createLogMsg(logMsgs));
 		out.println(Template.createForm("home", "POST" ,
 			Template.createDiv("right", 
-				Template.createDropDown(sortOptions, "sort") +
+				Template.createDropDown(sortOptions, "sort", false) +
 				Template.createSubmitBtn("sortBtn", "", "Sort") +
 				Template.createSubmitBtn("addEmpBtn", "", "Add Employee") +
 				Template.createSubmitBtn("roleBtn", "", "Manage Roles") +

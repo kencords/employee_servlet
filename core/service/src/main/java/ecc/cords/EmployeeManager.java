@@ -11,15 +11,15 @@ public class EmployeeManager{
 	private static DTO_EntityMapper mapper = new DTO_EntityMapper();
 	private static String logMsg = "";
 
-	public static String addEmployee(EmployeeDTO employeeDTO) {
+	public static LogMsg addEmployee(EmployeeDTO employeeDTO) {
 		Employee employee = mapper.mapToEmployee(employeeDTO, true);
 		try {
 			daoService.saveElement(employee);
 		} catch(Exception exception) {
 			exception.printStackTrace();
-			return "Employee Creation Failed!";
+			return new LogMsg("Employee Creation Failed!", "red");
 		}
-		return "Employee Creation Successful!";
+		return new LogMsg("Employee Creation Successful!", "green");
 	}
 
 	public static Name createName(String lname, String fname, String mname, String suffix, String title) {
@@ -79,14 +79,14 @@ public class EmployeeManager{
 		return employee;
 	}
 
-	public static String createRole(String role_str) {
+	public static LogMsg createRole(String role_str) {
 		Role role = new Role(role_str);
 		try {
 			daoService.getElement(role);
-			return "Role " + role_str + " already exists!";
+			return new LogMsg("Role " + role_str + " already exists!", "red");
 		} catch(Exception exception) {
 			daoService.saveElement(role);
-			return "Successfully created " + role_str + " Role!";
+			return new LogMsg("Successfully created " + role_str + " Role!", "green");
 		}
 	}
 
@@ -101,17 +101,17 @@ public class EmployeeManager{
 		}
 	}
 
-	public static String updateRole(RoleDTO roleDTO, String role_name) throws Exception {
+	public static LogMsg updateRole(RoleDTO roleDTO, String role_name) throws Exception {
 		Role role = mapper.mapToRole(roleDTO);
 		String prev_name = role.getRoleName();
 		if(role.getEmployees().size()==0) {
 			role.setRoleName(role_name);
 			try {
 				Role newRole = daoService.getElement(role);
-				return "Role " + role_name + " already exists!"; 
+				return new LogMsg("Role " + role_name + " already exists!", "red"); 
 			} catch(Exception exception) {
 				daoService.updateElement(role);
-				return "Successfully updated role " + prev_name + " to " + role.getRoleName() + "!";
+				return new LogMsg("Successfully updated role " + prev_name + " to " + role.getRoleName() + "!", "green");
 			}
 		}
 		logMsg = "Role " + role.getRoleName() + " cannot be updated!";
