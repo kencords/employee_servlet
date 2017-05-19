@@ -23,36 +23,58 @@ public class FormValidator {
 	private String zipcode;
 	private String curHired;
 	private String hDate;
+	private boolean hasSaved;
+	private boolean isAccepted;
+	private EmployeeDTO employee = new EmployeeDTO();
+
+	public boolean getHasSaved() {
+		return hasSaved;
+	}	
+
+	public void setHasSaved(boolean hasSaved) {
+		this.hasSaved = hasSaved;
+	}
+
+	public void setEmployee(EmployeeDTO employee) {
+		this.employee = employee;
+	}
 
 	public void saveEmployeeIfValid(List<LogMsg> logMsgs, List<ContactDTO> contacts, List<RoleDTO> roles,
-	HttpServletRequest req, HttpServletResponse res) 
+	HttpServletRequest req, HttpServletResponse res, boolean isEdit) 
 	throws IOException, ServletException {
-		lName = req.getParameter("lName");
-		fName = req.getParameter("fName");
-		mName = req.getParameter("mName");
+		isAccepted = true;
+		lName = req.getParameter("lastName");
+		fName = req.getParameter("firstName");
+		mName = req.getParameter("middleName");
 		title = req.getParameter("title");
 		suffix = req.getParameter("suffix");
-		bDate = req.getParameter("bDate");
+		bDate = req.getParameter("birthDate");
 		gwa = req.getParameter("gwa");
 		strNo = req.getParameter("strNo");
 		street = req.getParameter("street");
 		brgy = req.getParameter("brgy");
 		city = req.getParameter("city");
 		zipcode = req.getParameter("zipcode");
-		curHired = req.getParameter("hireOpt");
-		hDate = req.getParameter("hDate");
-		boolean isValid = validateEmployeeForm(logMsgs, contacts.size());
-		if(isValid) {
+		curHired = req.getParameter("currentlyHired");
+		hDate = req.getParameter("hireDate");
+		isAccepted = validateEmployeeForm(logMsgs, contacts.size());
+		if(isAccepted) {
 			try {
-				saveEmployee(logMsgs, contacts, roles);
+				saveEmployee(logMsgs, contacts, roles, isEdit);
 			} catch(Exception ex) {
 				ex.printStackTrace();
 			}
 		}
 	}
 
-	private void saveEmployee(List<LogMsg> logMsgs, List<ContactDTO> contacts, List<RoleDTO> roles) throws Exception {
-		EmployeeDTO employee = new EmployeeDTO();
+	public String valueFiller(HttpServletRequest req, String paramName, String initVal) {
+		return ((req.getParameter(paramName) == null || (hasSaved && isAccepted))? initVal : req.getParameter(paramName));
+	}
+
+	private void saveEmployee(List<LogMsg> logMsgs, List<ContactDTO> contacts, List<RoleDTO> roles, boolean isEdit) throws Exception {
+		if(!isEdit) { 
+			employee = new EmployeeDTO();
+		}
 		employee.setLastName(lName);
 		employee.setFirstName(fName);
 		employee.setMiddleName(mName);
@@ -65,7 +87,12 @@ public class FormValidator {
 		employee.setCurrentlyHired(curHired.equals("YES"));
 		employee.setHireDate(Utils.convertToDate(hDate));
 		employee.setRoles(new HashSet<RoleDTO>(roles));
-		logMsgs.add(EmployeeManager.addEmployee(employee));
+		if(!isEdit){
+			logMsgs.add(EmployeeManager.addEmployee(employee));
+		}
+		if(isEdit) {
+			logMsgs.add(EmployeeManager.updateEmployee(employee));
+		}
 	}
 
 	private AddressDTO fillAddress() {
@@ -98,11 +125,11 @@ public class FormValidator {
 			isValid = false;
 			logMsgs.add(new LogMsg("Employee must have atleast one contact!", "red"));
 		}
-		if(!Utils.isValidDate(bDate)){
+		if(bDate!=null && !bDate.equals("") && !Utils.isValidDate(bDate)){
 			isValid = false;
 			logMsgs.add(new LogMsg("Invalid Birthdate!", "red"));
 		}
-		if(!Utils.isValidDate(hDate)){
+		if(hDate!=null && !hDate.equals("") && !Utils.isValidDate(hDate)){
 			isValid = false;
 			logMsgs.add(new LogMsg("Invalid Hire Date!", "red"));
 		}

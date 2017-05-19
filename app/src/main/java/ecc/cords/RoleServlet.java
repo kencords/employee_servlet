@@ -23,26 +23,21 @@ public class RoleServlet extends HttpServlet {
 	}
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-
 		res.setContentType("text/html");
 		PrintWriter out = res.getWriter();
 
 		if(req.getParameter("cancel") != null) {
 			logMsgs.add(new LogMsg(req.getParameter("cancel"), "red"));
 		}
-
 		if(req.getParameter("homeBtn") != null) {
 			res.sendRedirect("home");
 		}
-
 		if(req.getParameter("addNowBtn") != null) {
 			processAddRole(req.getParameter("role_name").trim());
 		}
-
 		if(req.getParameter("editNowBtn") != null) {
 			processEditRole(Integer.parseInt(req.getParameter("editNowBtn")), req.getParameter("role_name_ed"));
 		}
-
 		if(req.getParameter("delRoleBtn") != null) {
 			processDeleteRole(Integer.parseInt(req.getParameter("delRoleBtn")));
 		}
@@ -62,7 +57,6 @@ public class RoleServlet extends HttpServlet {
 		if(req.getParameter("showOwnerBtn") !=null) {
 			out.println(displayRoleOwners(Integer.parseInt(req.getParameter("showOwnerBtn"))));
 		}
-
 		out.println(Template.getClosing());
 		out.close();
 		logMsgs.clear();
@@ -124,40 +118,6 @@ public class RoleServlet extends HttpServlet {
 		return sb.toString();
 	}
 
-	private void processAddRole(String roleName) {
-		if(roleName.equals("")) {
-			logMsgs.add(new LogMsg("Role Name must not be Empty!", "red"));
-			return;
-		}
-		logMsgs.add(EmployeeManager.createRole(roleName.toUpperCase()));
-	}
-
-	private void processEditRole(int roleId, String roleName) {
-		if(roleName.equals("")) {
-			logMsgs.add(new LogMsg("Role Name must not be Empty!", "red"));
-			return;
-		}
-		RoleDTO role = new RoleDTO();
-		try {
-			role = EmployeeManager.getRole(roleId);
-			logMsgs.add(EmployeeManager.updateRole(role, roleName));
-		} catch(Exception ex) {
-			logMsgs.add(new LogMsg(EmployeeManager.getLogMsg(), "red"));
-			logMsgs.add(new LogMsg("Role is currently used by: \n" + getRoleOwners(role), "red"));
-		}
-	}
-
-	private void processDeleteRole(int roleId) {
-		RoleDTO role = new RoleDTO();
-		try {
-			role = EmployeeManager.getRole(roleId);
-			logMsgs.add(new LogMsg(EmployeeManager.deleteRole(role), "green"));
-		} catch(Exception ex) {
-			logMsgs.add(new LogMsg(EmployeeManager.getLogMsg(), "red"));
-			logMsgs.add(new LogMsg("Role is currently used by: \n" + getRoleOwners(role), "red"));
-		}
-	}
-
 	private String createAddRoleFields() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<br>\n");
@@ -188,5 +148,40 @@ public class RoleServlet extends HttpServlet {
 						   .sorted((emp1,emp2) -> Long.compare(emp1.getEmpId(), emp2.getEmpId()))
 		                   .forEach(employee -> sb.append("<br>" + employee));
 		return sb.toString();
+	}
+
+	private void processAddRole(String roleName) {
+		if(roleName.equals("")) {
+			logMsgs.add(new LogMsg("Role Name must not be Empty!", "red"));
+			return;
+		}
+		logMsgs.add(EmployeeManager.createRole(roleName.toUpperCase()));
+	}
+
+
+	private void processDeleteRole(int roleId) {
+		RoleDTO role = new RoleDTO();
+		try {
+			role = EmployeeManager.getRole(roleId);
+			logMsgs.add(new LogMsg(EmployeeManager.deleteRole(role), "green"));
+		} catch(Exception ex) {
+			logMsgs.add(new LogMsg(EmployeeManager.getLogMsg(), "red"));
+			logMsgs.add(new LogMsg("Role is currently used by: \n" + getRoleOwners(role), "red"));
+		}
+	}
+
+	private void processEditRole(int roleId, String roleName) {
+		if(roleName.equals("")) {
+			logMsgs.add(new LogMsg("Role Name must not be Empty!", "red"));
+			return;
+		}
+		RoleDTO role = new RoleDTO();
+		try {
+			role = EmployeeManager.getRole(roleId);
+			logMsgs.add(EmployeeManager.updateRole(role, roleName));
+		} catch(Exception ex) {
+			logMsgs.add(new LogMsg(EmployeeManager.getLogMsg(), "red"));
+			logMsgs.add(new LogMsg("Role is currently used by: \n" + getRoleOwners(role), "red"));
+		}
 	}
 }

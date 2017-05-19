@@ -13,6 +13,7 @@ public class HomeServlet extends HttpServlet {
 	private final String[] sortOptions = {"GWA", "LastName", "Hire Date"};
 	private static DaoService daoService = new DaoService();
 	private static DTO_EntityMapper mapper = new DTO_EntityMapper();
+	private String order;
 
 	private List<LogMsg> logMsgs = new ArrayList<>();
 
@@ -21,28 +22,10 @@ public class HomeServlet extends HttpServlet {
 	}
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-
 		res.setContentType("text/html");
 		PrintWriter out = res.getWriter();
-		String order = "";
-
-		if(req.getParameter("delEmpBtn") != null) {
-			processDeleteEmployee(Integer.parseInt(req.getParameter("delEmpBtn")));
-		}
-
-		if(req.getParameter("sortBtn") != null) {
-			order = req.getParameter("sort");
-			logMsgs.add(new LogMsg("Sorted By " + order, "green"));
-		}
-
-		if(req.getParameter("addEmpBtn")!= null) {
-			res.sendRedirect("employeeForm");
-		}
-
-		if(req.getParameter("roleBtn") != null) {
-			res.sendRedirect("roles");
-		}
-
+		order = "";
+		handleEvents(req, res);
 		out.println(Template.getHeader("Employee Records System: Home Page"));
 		out.println("<h1>EMPLOYEE RECORDS SYSTEM</h1>");
 		out.println(Template.createLogMsg(logMsgs));
@@ -80,13 +63,33 @@ public class HomeServlet extends HttpServlet {
 			sb.append("<td align=\"center\">" + employee.getGwa() + "</td>");
 			sb.append("<td align=\"center\">" + employee.getHireDate() + "</td>");
 			sb.append("<td align=\"center\">" + 
-				Template.createSubmitBtn("editEmpBtn", employee.getEmpId() + "",  "Edit") +
+				Template.createSubmitBtn("viewEmpBtn", employee.getEmpId() + "",  "View") +
 				Template.createSubmitBtn("delEmpBtn", employee.getEmpId() + "",  "Delete") +
 			"</td>");
 			sb.append("</tr>");
 		}
 		sb.append("</table>");
 		return sb.toString();
+	}
+
+	private void handleEvents(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+		if(req.getParameter("viewEmpBtn") != null) {
+			redirect(res, "employeeProfile?empId=" + req.getParameter("viewEmpBtn"));
+		}
+		if(req.getParameter("delEmpBtn") != null) {
+			processDeleteEmployee(Integer.parseInt(req.getParameter("delEmpBtn")));
+		}
+		if(req.getParameter("sortBtn") != null) {
+			order = req.getParameter("sort");
+			logMsgs.add(new LogMsg("Sorted By " + order, "green"));
+		}
+		if(req.getParameter("addEmpBtn")!= null) {
+			redirect(res, "employeeForm");
+		}
+		if(req.getParameter("roleBtn") != null) {
+			logMsgs.clear();
+			redirect(res, "roles");
+		}
 	}
 
 	private void processDeleteEmployee(int empId) {
@@ -98,5 +101,10 @@ public class HomeServlet extends HttpServlet {
 			return;
 		}
 		logMsgs.add(new LogMsg("Deleted Employee " + empId + "!", "green"));
+	}
+
+	private void redirect(HttpServletResponse res, String dest) throws IOException, ServletException {
+		logMsgs.clear();
+		res.sendRedirect(dest);
 	}
 }

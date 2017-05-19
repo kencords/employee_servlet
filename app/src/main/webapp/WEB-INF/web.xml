@@ -18,6 +18,14 @@
     <servlet-name>EmployeeFormServlet</servlet-name>
     <servlet-class>ecc.cords.EmployeeFormServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>EditEmployeeServlet</servlet-name>
+    <servlet-class>ecc.cords.EditEmployeeServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>EmployeeProfile</servlet-name>
+    <servlet-class>ecc.cords.ProfileServlet</servlet-class>
+  </servlet>
  
   <servlet-mapping>
     <servlet-name>HomeServlet</servlet-name>
@@ -31,5 +39,13 @@
     <servlet-name>EmployeeFormServlet</servlet-name>
     <url-pattern>/employeeForm</url-pattern>
   </servlet-mapping>
- 
+  <servlet-mapping>
+    <servlet-name>EditEmployeeServlet</servlet-name>
+    <url-pattern>/editEmployee</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EmployeeProfile</servlet-name>
+    <url-pattern>/employeeProfile</url-pattern>
+  </servlet-mapping>
+
 </web-app>
