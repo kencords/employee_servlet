@@ -13,42 +13,34 @@ public class ProfileServlet extends HttpServlet {
 	private static DTO_EntityMapper mapper = new DTO_EntityMapper();
 
 	private List<LogMsg> logMsgs = new ArrayList<>();
-	private boolean isSpecified;
-	private boolean isValidEmployee;
 
 	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 		res.setContentType("text/html");
 		PrintWriter out = res.getWriter();
+		handleEvents(req, res);
 
-		isSpecified = isValidEmployee = true;
 		EmployeeDTO employee = new EmployeeDTO();
 		if(req.getParameter("empId")==null || req.getParameter("empId").equals("")) {
-			logMsgs.add(new LogMsg("Employee not specified!", "red"));
-			isSpecified = false;
+			res.sendError(404,"Employee not specified!");
 		}
 		else {
 			try {
 				employee = mapper.mapToEmployeeDTO(EmployeeManager.getEmployee(Integer.parseInt(req.getParameter("empId"))));
 			} catch(Exception ex) {
-				logMsgs.add(new LogMsg("Employee not found!", "red"));
-				isValidEmployee = false;
+				res.sendError(404,"Employee not found!");
 			}
 		}
-		handleEvents(req, res);
-
 		out.println(Template.getHeader("Employee Records System: Employee Profile"));
 		out.println("<h1>EMPLOYEE PROFILE</h1>");
 		out.println(Template.createLogMsg(logMsgs));
-		if(isSpecified && isValidEmployee) {
-			out.println(Template.createForm("employeeProfile", "GET", 
+		out.println(Template.createForm("employeeProfile", "GET", 
+			Template.createDiv("left",
+				Template.createSubmitBtn("editEmpBtn", req.getParameter("empId"), "Edit Employee") + "\n" +
+				Template.createSubmitBtn("backBtn", "", "Back") + "\n" +
 				Template.createDiv("left",
-					Template.createSubmitBtn("editEmpBtn", req.getParameter("empId"), "Edit Employee") + "\n" +
-					Template.createSubmitBtn("backBtn", "", "Back") + "\n" +
-					Template.createDiv("left",
-						showEmployeeDetails(employee)
-				)) 
-			));	
-		}
+					showEmployeeDetails(employee)
+			)) 
+		));	
 		out.println(Template.getClosing());
 		out.close();
 		logMsgs.clear();

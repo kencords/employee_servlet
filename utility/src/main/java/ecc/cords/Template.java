@@ -39,6 +39,17 @@ public class Template {
 		return sb.toString();
 	}
 
+	public static String createSelectedDropDown(String[] options, String name, String selected) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<select name=\"" + name + "\">\n");
+		for(String option : options) {
+			sb.append("<option " + (option.equals(selected)? "selected" : "") + " value= \"" + option + "\">\n\t" + 
+			option + "\n</option>");
+		}
+		sb.append("</select>\n");
+		return sb.toString();
+	}
+
 	public static String createForm(String action, String method, String content) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<form action=\"" + action + "\" method=\"" + method + "\">\n");

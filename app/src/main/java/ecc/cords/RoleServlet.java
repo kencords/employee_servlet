@@ -13,7 +13,6 @@ public class RoleServlet extends HttpServlet {
 
 	private final String[] roleTableHdrs = {"ID", "Role Name", "Action"};
 	private final String[] ownerHdrs = {"ID", "Employee Name"};
-	private static DaoService daoService = new DaoService();
 	private static DTO_EntityMapper mapper = new DTO_EntityMapper();
 
 	private List<LogMsg> logMsgs = new ArrayList<>();

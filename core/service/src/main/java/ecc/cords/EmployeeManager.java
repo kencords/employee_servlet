@@ -22,10 +22,17 @@ public class EmployeeManager{
 		return new LogMsg("Employee Creation Successful!", "green");
 	}
 
-	public static Name createName(String lname, String fname, String mname, String suffix, String title) {
-		return new Name(lname, fname, mname, suffix, title);
+	public static LogMsg updateEmployee(EmployeeDTO employeeDTO) {
+		Employee employee = mapper.mapToEmployee(employeeDTO, true);
+		try {
+			daoService.updateElement(employee);
+		} catch(Exception exception) {
+			exception.printStackTrace();
+			return new LogMsg("Employee Update Failed!", "red");
+		}
+		return new LogMsg("Employee Updated Successfully!", "green");
 	}
-
+	
 	public static EmployeeDTO addContact(EmployeeDTO employee, Set<ContactDTO> contacts) {
 		contacts.forEach(contact -> { 
 			contact.setEmployee(employee);
@@ -45,14 +52,13 @@ public class EmployeeManager{
 		employee.setContacts(contacts);
 	}
 													
-	public static Employee getEmployee(int id) throws Exception {
+	public static Employee getEmployee(int id) {
 		Employee employee = new Employee();
 		try {
 			employee = daoService.getElement(Long.valueOf(id), Employee.class);
 			employee.getEmpId();
 			return employee;
 		} catch(Exception exception) {
-			exception.printStackTrace();
 			logMsg = "Employee not found!";
 			throw exception;
 		}
@@ -63,6 +69,7 @@ public class EmployeeManager{
 			Set<RoleDTO> roles = employee.getRoles();
 			Role role = daoService.getElement(Long.valueOf(role_id), Role.class);
 			roles.add(mapper.mapToRoleDTO(role));
+			System.out.println(role.getRoleName());
 			employee.setRoles(roles);
 			return employee;
 		} catch(Exception exception) {
@@ -71,10 +78,9 @@ public class EmployeeManager{
 		}
 	}
 
-	public static EmployeeDTO deleteEmployeeRole(EmployeeDTO employee, int role_id) throws Exception {
+	public static EmployeeDTO deleteEmployeeRole(EmployeeDTO employee, RoleDTO role) {
 		Set<RoleDTO> roles = employee.getRoles();
-		Role role = daoService.getElement(Long.valueOf(role_id), Role.class);
-		roles.remove(mapper.mapToRoleDTO(role));
+		roles.remove(role);
 		employee.setRoles(roles);
 		return employee;
 	}

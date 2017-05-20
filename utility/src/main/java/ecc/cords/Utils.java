@@ -11,6 +11,10 @@ public class Utils{
 		return new SimpleDateFormat("MMMM dd yyyy").format(date);
 	}
 
+	public static String formatDateSimplified(Date date) {
+		return new SimpleDateFormat("yyyy-MM-dd").format(date);
+	}
+
 	public static Date convertToDate(String date) throws Exception{
 		return new SimpleDateFormat("yyyy-MM-dd").parse(date);
 	}

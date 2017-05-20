@@ -16,10 +16,13 @@ public class EditEmployeeServlet extends HttpServlet {
 	private List<ContactDTO> contacts = new ArrayList<>();
 	private List<RoleDTO> roles = new ArrayList<>();
 	private EmployeeDTO employee = new EmployeeDTO();
+	private EmployeeDTO prevEmployee = new EmployeeDTO();
 	private AddressDTO address = new AddressDTO();
 	private List<LogMsg> logMsgs = new ArrayList<>();
 	private FormValidator validator = new FormValidator();
 	private String method = "POST";
+	private boolean isInitial = true;
+	private boolean validEmployee = true;
 
 	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 		doPost(req,res);
@@ -30,47 +33,45 @@ public class EditEmployeeServlet extends HttpServlet {
 		PrintWriter out = res.getWriter();
 		handleEvents(req, res);
 		method = "POST";
-		try {
-			employee = mapper.mapToEmployeeDTO(EmployeeManager.getEmployee(Integer.parseInt(req.getParameter("empId"))));
-			contacts = new ArrayList<>(employee.getContacts());
-			roles = new ArrayList<>(employee.getRoles());
-			address = employee.getAddress();
-		} catch(Exception ex) {
-			ex.printStackTrace();
-			logMsgs.add(new LogMsg("Employee not found!", "red"));
-		}
+		loadEmployee(res, req.getParameter("empId"));
+
 		out.println(Template.getHeader("Employee Records System: Edit Employee"));
 		out.println("<h1>EDIT EMPLOYEE</h1>");
-		out.println(Template.createForm("editEmployee", method,
-			"<div style=\"border:1px solid black; width:500px; margin: 0 auto; text-align:center;\">" +
-			Template.createLogMsg(logMsgs) + "<br>" +
-			Template.createEmphasizedText("PERSONAL INFORMATION") +
-			Template.createTextField("title", validator.valueFiller(req, "title", employee.getTitle()), "Title") + "<br>" +
-			Template.createTextField("lastName", validator.valueFiller(req, "lastName", employee.getLastName()), "Last Name*") + "<br>" +
-			Template.createTextField("firstName", validator.valueFiller(req, "firstName", employee.getFirstName()), "First Name*") + "<br>" +
-			Template.createTextField("middleName", validator.valueFiller(req, "middleName", employee.getMiddleName()), "Middle Name*") + "<br>" +
-			Template.createTextField("suffix", validator.valueFiller(req, "suffix", employee.getSuffix()), "Suffix") + "<br>" +
-			Template.createTextField("birthDate", validator.valueFiller(req, "birthDate", Utils.formatDateSimplified(employee.getBirthDate())), "Birth Date (yyyy-mm-dd)*") + "<br>" +
-			Template.createTextField("gwa", validator.valueFiller(req, "gwa", employee.getGwa() + ""), "GWA") + "<br>" +
-			Template.createEmphasizedText("ADDRESS") +
-			Template.createTextField("strNo", validator.valueFiller(req, "strNo", address.getStreetNo() + ""), "Street Number*") + "<br>" +
-			Template.createTextField("street", validator.valueFiller(req, "street", address.getStreet()), "Street*") + "<br>" +
-			Template.createTextField("brgy", validator.valueFiller(req, "brgy", address.getBrgy()), "Brgy*") + "<br>" +
-			Template.createTextField("city", validator.valueFiller(req, "city", address.getCity()), "City*") + "<br>" +
-			Template.createTextField("zipcode", validator.valueFiller(req, "zipcode", address.getZipcode()), "Zipcode*") + "<br>" +
-			Template.createEmphasizedText("CONTACTS") +
-			Contact_RoleUI.askContacts(contacts, true) +
-			Template.createEmphasizedText("CAREER INFORMATION") +
-			"<p style=\"display:inline-block;\">Currently Hired? &nbsp;</p>" +  
-			Template.createSelectedDropDown(hiredOptions, "currentlyHired", (employee.isCurrentlyHired()? "YES" : "NO")) + "<br>" +
-			Template.createTextField("hireDate", validator.valueFiller(req, "hDate", Utils.formatDateSimplified(employee.getHireDate())), "HIRE DATE (yyyy-mm-dd)*") + "<br>" +
-			Template.createEmphasizedText("ROLES") +
-			Contact_RoleUI.askRoles(roles) + "<br><br>" +
-			Template.createSubmitBtn("saveEmployeeBtn", "", "SAVE EMPLOYEE") +
-			Template.createSubmitBtn("backBtn", "", "BACK") + "<br>" +
-			"<input type=\"hidden\" name=\"empId\" value=\"" + employee.getEmpId() + "\"/><br>" +
-			"<br></div>"
-		));
+		if(validEmployee) {
+			out.println(Template.createForm("editEmployee", method,
+				"<div style=\"border:1px solid black; width:500px; margin: 0 auto; text-align:center;\">" +
+				Template.createLogMsg(logMsgs) + "<br>" +
+				Template.createEmphasizedText("PERSONAL INFORMATION") +
+				Template.createTextField("title", validator.valueFiller(req, "title", employee.getTitle()), "Title") + "<br>" +
+				Template.createTextField("lastName", validator.valueFiller(req, "lastName", employee.getLastName()), "Last Name*") + "<br>" +
+				Template.createTextField("firstName", validator.valueFiller(req, "firstName", employee.getFirstName()), "First Name*") + "<br>" +
+				Template.createTextField("middleName", validator.valueFiller(req, "middleName", employee.getMiddleName()), "Middle Name*") + "<br>" +
+				Template.createTextField("suffix", validator.valueFiller(req, "suffix", employee.getSuffix()), "Suffix") + "<br>" +
+				Template.createTextField("birthDate", validator.valueFiller(req, "birthDate", Utils.formatDateSimplified(employee.getBirthDate())), "Birth Date (yyyy-mm-dd)*") + "<br>" +
+				Template.createTextField("gwa", validator.valueFiller(req, "gwa", employee.getGwa() + ""), "GWA") + "<br>" +
+				Template.createEmphasizedText("ADDRESS") +
+				Template.createTextField("strNo", validator.valueFiller(req, "strNo", address.getStreetNo() + ""), "Street Number*") + "<br>" +
+				Template.createTextField("street", validator.valueFiller(req, "street", address.getStreet()), "Street*") + "<br>" +
+				Template.createTextField("brgy", validator.valueFiller(req, "brgy", address.getBrgy()), "Brgy*") + "<br>" +
+				Template.createTextField("city", validator.valueFiller(req, "city", address.getCity()), "City*") + "<br>" +
+				Template.createTextField("zipcode", validator.valueFiller(req, "zipcode", address.getZipcode()), "Zipcode*") + "<br>" +
+				Template.createEmphasizedText("CONTACTS") +
+				Contact_RoleUI.askContacts(contacts, true) +
+				Template.createEmphasizedText("CAREER INFORMATION") +
+				"<p style=\"display:inline-block;\">Currently Hired? &nbsp;</p>" +  
+				Template.createSelectedDropDown(hiredOptions, "currentlyHired", (employee.isCurrentlyHired()? "YES" : "NO")) + "<br>" +
+				Template.createTextField("hireDate", validator.valueFiller(req, "hDate", Utils.formatDateSimplified(employee.getHireDate())), "HIRE DATE (yyyy-mm-dd)*") + "<br>" +
+				Template.createEmphasizedText("ROLES") +
+				Contact_RoleUI.askRoles(roles) + "<br><br>" +
+				Template.createSubmitBtn("saveEmployeeBtn", "", "SAVE EMPLOYEE") +
+				Template.createSubmitBtn("backBtn", "", "BACK") + "<br>" +
+				"<input type=\"hidden\" name=\"empId\" value=\"" + employee.getEmpId() + "\"/><br>" +
+				"<br></div>"
+			));
+		}
+		else {
+			out.println(Template.createLogMsg(logMsgs));
+		}
 		if(validator.getHasSaved()){
 			validator.setHasSaved(false);
 		}
@@ -84,12 +85,14 @@ public class EditEmployeeServlet extends HttpServlet {
 			validator.setEmployee(employee);
 			validator.saveEmployeeIfValid(logMsgs, contacts, roles, req, res, true);
 			validator.setHasSaved(true);
+			isInitial = true;
 		}
 		if(req.getParameter("backBtn") != null) {
 			roles.clear();
 			contacts.clear();
 			method = "GET";
 			logMsgs.clear();
+			isInitial = true;
 			res.sendRedirect("employeeProfile?empId=" + employee.getEmpId());
 		}
 		if(req.getParameter("addContactBtn") != null) {
@@ -109,6 +112,29 @@ public class EditEmployeeServlet extends HttpServlet {
 			EmployeeManager.deleteEmployeeRole(employee, roles.get(Integer.parseInt(req.getParameter("delRoleBtn"))));
 			roles = new ArrayList<>(employee.getRoles());
 		}	
+	}
+
+	private void loadEmployee(HttpServletResponse res, String empId) throws IOException, ServletException {
+		if(empId == null) {
+			validEmployee = false;
+			res.sendError(404,"Employee not specified!");
+			return;
+		}
+		if(isInitial || !empId.equals(employee.getEmpId() + "")) {
+			try {	
+				employee = mapper.mapToEmployeeDTO(EmployeeManager.getEmployee(Integer.parseInt(empId)));
+			} catch(Exception ex) {
+				validEmployee = false;
+				res.sendError(404,"Employee not found!");
+				return;
+			}
+			validEmployee = true;
+			prevEmployee = employee;
+			contacts = new ArrayList<>(employee.getContacts());
+			roles = new ArrayList<>(employee.getRoles());
+			address = employee.getAddress();
+			isInitial = false;
+		}
 	}
 
 	private void processAddContact(String contactType, String contactValue) {
@@ -144,6 +170,7 @@ public class EditEmployeeServlet extends HttpServlet {
 	}
 
 	private void processAddRole(int role_id) {
+		System.out.println("pAR");
 		try {
 			employee = EmployeeManager.addEmployeeRole(employee, role_id);
 		} catch(Exception ex) {
