@@ -24,6 +24,7 @@ public class RoleServlet extends HttpServlet {
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 		res.setContentType("text/html");
 		PrintWriter out = res.getWriter();
+		req.getSession().invalidate();
 
 		if(req.getParameter("cancel") != null) {
 			logMsgs.add(new LogMsg(req.getParameter("cancel"), "red"));

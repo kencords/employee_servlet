@@ -19,17 +19,7 @@ public class ProfileServlet extends HttpServlet {
 		PrintWriter out = res.getWriter();
 		handleEvents(req, res);
 
-		EmployeeDTO employee = new EmployeeDTO();
-		if(req.getParameter("empId")==null || req.getParameter("empId").equals("")) {
-			res.sendError(404,"Employee not specified!");
-		}
-		else {
-			try {
-				employee = mapper.mapToEmployeeDTO(EmployeeManager.getEmployee(Integer.parseInt(req.getParameter("empId"))));
-			} catch(Exception ex) {
-				res.sendError(404,"Employee not found!");
-			}
-		}
+		EmployeeDTO employee = loadEmployee(req, res);
 		out.println(Template.getHeader("Employee Records System: Employee Profile"));
 		out.println("<h1>EMPLOYEE PROFILE</h1>");
 		out.println(Template.createLogMsg(logMsgs));
@@ -49,11 +39,35 @@ public class ProfileServlet extends HttpServlet {
 	private void handleEvents(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 		if(req.getParameter("editEmpBtn") != null) {
 			logMsgs.clear();
-			res.sendRedirect("editEmployee?empId=" + req.getParameter("editEmpBtn"));
+			res.sendRedirect("editEmployee");
 		}
 		if(req.getParameter("backBtn") != null) {
 			logMsgs.clear();
+			req.getSession().invalidate();
 			res.sendRedirect("home");
+		}
+	}
+
+	private EmployeeDTO loadEmployee(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+		EmployeeDTO employee = new EmployeeDTO();
+		if(req.getParameter("empId")==null || req.getParameter("empId").equals("")) {
+			res.sendError(404,"Employee not specified!");
+			return employee;
+		}
+		else {
+			String empId = req.getParameter("empId");
+			HttpSession session = req.getSession();
+			if(session.getAttribute("employee") == null || !empId.equals(((EmployeeDTO)session.getAttribute("employee")).getEmpId() + "")) {
+				try {
+					employee = mapper.mapToEmployeeDTO(EmployeeManager.getEmployee(Integer.parseInt(req.getParameter("empId"))));
+					session.setAttribute("employee", employee);
+					return employee;
+				} catch(Exception ex) {
+					res.sendError(404,"Employee not found!");
+					return employee;
+				}
+			}
+			return (EmployeeDTO)session.getAttribute("employee");
 		}
 	}
 

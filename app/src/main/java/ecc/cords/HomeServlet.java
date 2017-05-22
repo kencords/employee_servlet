@@ -25,11 +25,12 @@ public class HomeServlet extends HttpServlet {
 		res.setContentType("text/html");
 		PrintWriter out = res.getWriter();
 		order = "";
+		req.getSession().invalidate();
 		handleEvents(req, res);
 		out.println(Template.getHeader("Employee Records System: Home Page"));
 		out.println("<h1>EMPLOYEE RECORDS SYSTEM</h1>");
 		out.println(Template.createLogMsg(logMsgs));
-		out.println(Template.createForm("home", "POST" ,
+		out.println(Template.createForm("home", "GET" ,
 			Template.createDiv("right", 
 				Template.createDropDown(sortOptions, "sort", false) +
 				Template.createSubmitBtn("sortBtn", "", "Sort") +

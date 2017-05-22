@@ -13,15 +13,9 @@ public class EditEmployeeServlet extends HttpServlet {
 
 	private final String[] hiredOptions = {"YES", "NO"};
 
-	private List<ContactDTO> contacts = new ArrayList<>();
-	private List<RoleDTO> roles = new ArrayList<>();
-	private EmployeeDTO employee = new EmployeeDTO();
-	private EmployeeDTO prevEmployee = new EmployeeDTO();
-	private AddressDTO address = new AddressDTO();
 	private List<LogMsg> logMsgs = new ArrayList<>();
 	private FormValidator validator = new FormValidator();
 	private String method = "POST";
-	private boolean isInitial = true;
 	private boolean validEmployee = true;
 
 	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
@@ -31,9 +25,15 @@ public class EditEmployeeServlet extends HttpServlet {
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 		res.setContentType("text/html");
 		PrintWriter out = res.getWriter();
-		handleEvents(req, res);
 		method = "POST";
-		loadEmployee(res, req.getParameter("empId"));
+		EmployeeDTO employee = new EmployeeDTO();
+		handleEvents(req, res);
+		if(!res.isCommitted()) {
+			employee = loadEmployee(req, res);
+		}
+		AddressDTO address = employee.getAddress();
+		List<ContactDTO> contacts = new ArrayList<>(employee.getContacts());
+		List<RoleDTO> roles = new ArrayList<>(employee.getRoles());
 
 		out.println(Template.getHeader("Employee Records System: Edit Employee"));
 		out.println("<h1>EDIT EMPLOYEE</h1>");
@@ -65,7 +65,6 @@ public class EditEmployeeServlet extends HttpServlet {
 				Contact_RoleUI.askRoles(roles) + "<br><br>" +
 				Template.createSubmitBtn("saveEmployeeBtn", "", "SAVE EMPLOYEE") +
 				Template.createSubmitBtn("backBtn", "", "BACK") + "<br>" +
-				"<input type=\"hidden\" name=\"empId\" value=\"" + employee.getEmpId() + "\"/><br>" +
 				"<br></div>"
 			));
 		}
@@ -81,63 +80,53 @@ public class EditEmployeeServlet extends HttpServlet {
 	}
 
 	private void handleEvents(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+		EmployeeDTO employee = (EmployeeDTO) req.getSession().getAttribute("employee");
+		List<RoleDTO> roles = new ArrayList<>(employee.getRoles());
+		List<ContactDTO> contacts = new ArrayList<>(employee.getContacts());
 		if(req.getParameter("saveEmployeeBtn") != null) {
 			validator.setEmployee(employee);
 			validator.saveEmployeeIfValid(logMsgs, contacts, roles, req, res, true);
 			validator.setHasSaved(true);
-			isInitial = true;
 		}
-		if(req.getParameter("backBtn") != null) {
-			roles.clear();
-			contacts.clear();
+		if(req.getParameter("backBtn") != null) {;
 			method = "GET";
 			logMsgs.clear();
-			isInitial = true;
+			req.getSession().invalidate();
 			res.sendRedirect("employeeProfile?empId=" + employee.getEmpId());
 		}
 		if(req.getParameter("addContactBtn") != null) {
-			processAddContact(req.getParameter("conOpt"), req.getParameter("contact"));
+			processAddContact(req.getParameter("conOpt"), req.getParameter("contact"), employee);
 		}
 		if(req.getParameter("delConBtn") != null) {
-			processDeleteContact(Integer.parseInt(req.getParameter("delConBtn")));
+			processDeleteContact(employee, contacts, Integer.parseInt(req.getParameter("delConBtn")));
 		}
 		if(req.getParameter("updateConBtn") != null) {
 			int index = Integer.parseInt(req.getParameter("updateConBtn"));
 			contacts.get(index).setContactValue(req.getParameter("contact"+index));
 		}
 		if(req.getParameter("addRoleBtn") != null){
-			processAddRole(Integer.parseInt(req.getParameter("roleOpt")));
+			processAddRole(employee, Integer.parseInt(req.getParameter("roleOpt")));
 		}
 		if(req.getParameter("delRoleBtn") != null) {
-			EmployeeManager.deleteEmployeeRole(employee, roles.get(Integer.parseInt(req.getParameter("delRoleBtn"))));
-			roles = new ArrayList<>(employee.getRoles());
-		}	
+			EmployeeManager.deleteEmployeeRole(employee, roles.get(Integer.parseInt(req.getParameter("delRoleBtn"))));		
+		}
+		if(!res.isCommitted()) {
+			req.getSession().setAttribute("employee", employee);	
+		}
 	}
 
-	private void loadEmployee(HttpServletResponse res, String empId) throws IOException, ServletException {
-		if(empId == null) {
+	private EmployeeDTO loadEmployee(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+		HttpSession session = req.getSession();
+		EmployeeDTO employee = new EmployeeDTO();
+		if(session.getAttribute("employee") == null) {
 			validEmployee = false;
 			res.sendError(404,"Employee not specified!");
-			return;
+			return employee;
 		}
-		if(isInitial || !empId.equals(employee.getEmpId() + "")) {
-			try {	
-				employee = mapper.mapToEmployeeDTO(EmployeeManager.getEmployee(Integer.parseInt(empId)));
-			} catch(Exception ex) {
-				validEmployee = false;
-				res.sendError(404,"Employee not found!");
-				return;
-			}
-			validEmployee = true;
-			prevEmployee = employee;
-			contacts = new ArrayList<>(employee.getContacts());
-			roles = new ArrayList<>(employee.getRoles());
-			address = employee.getAddress();
-			isInitial = false;
-		}
+		return (EmployeeDTO) session.getAttribute("employee");
 	}
 
-	private void processAddContact(String contactType, String contactValue) {
+	private void processAddContact(String contactType, String contactValue, EmployeeDTO employee) {
 		if(contactType.equals(Contact_RoleUI.contactOptions[0]) && !Utils.isValidLandline(contactValue)) {
 			logMsgs.add(new LogMsg("Invalid Landline!", "red"));
 			return;
@@ -152,31 +141,27 @@ public class EditEmployeeServlet extends HttpServlet {
 		}
 		employee.getContacts().add(new ContactDTO((contactType.equals(Contact_RoleUI.contactOptions[0])? "Landline" : 
 		(contactType.equals(Contact_RoleUI.contactOptions[1])? "Mobile" : "Email"))  , contactValue));
-		contacts = new ArrayList<>(employee.getContacts());
 	}
 
-	private void processDeleteContact(int index) {
+	private void processDeleteContact(EmployeeDTO employee, List<ContactDTO> contacts, int index) {
 		if(contacts.size() == 1) {
 			logMsgs.add(new LogMsg("Employee must have atleast one Contact!", "red"));
 			return;
 		}	
 		try {
 			EmployeeManager.deleteContact(employee, contacts.get(index));
-			contacts = new ArrayList<>(employee.getContacts());
 		} catch(Exception ex) {
 			ex.printStackTrace();
 			logMsgs.add(new LogMsg("Cannot delete contact!", "red"));
 		}
 	}
 
-	private void processAddRole(int role_id) {
-		System.out.println("pAR");
+	private void processAddRole(EmployeeDTO employee, int role_id) {
 		try {
 			employee = EmployeeManager.addEmployeeRole(employee, role_id);
 		} catch(Exception ex) {
 			ex.printStackTrace();
 			logMsgs.add(new LogMsg("Cannot add role!", "red"));
 		}
-		roles = new ArrayList<>(employee.getRoles());
 	}
 }

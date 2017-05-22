@@ -2,6 +2,7 @@ package ecc.cords;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,10 +19,7 @@ public class EmployeeFormServlet extends HttpServlet {
 	private final String[] textParamNames = {"title", "lastName", "firstName", "middleName", "suffix", "birthDate", "gwa", "strNo", "street",
 	"brgy", "city", "zipcode"};
 	private final String[] textDisplay = {"Title", "Last Name*", "First Name*", "Middle Name*", "Suffix", "Birthdate (yyyy-mm-dd)*", "GWA*",
-	"STreet Number*", "Street*", "Barangay*", "City*", "Zipcode*"};
-	private List<ContactDTO> contacts = new ArrayList<>();
-	private List<RoleDTO> roles = new ArrayList<>();
-	private EmployeeDTO employee;
+	"Street Number*", "Street*", "Barangay*", "City*", "Zipcode*"};
 	private boolean hasSaved = false;
 
 	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
@@ -32,6 +30,10 @@ public class EmployeeFormServlet extends HttpServlet {
 		res.setContentType("text/html");
 		PrintWriter out = res.getWriter();
 		handleEvents(req, res);
+		EmployeeDTO employee = new EmployeeDTO();
+		if(!res.isCommitted()) {
+			employee = (EmployeeDTO) req.getSession().getAttribute("newEmp");
+		}
 
 		out.println(Template.getHeader("Employee Records System: Employee Form"));
 		out.println("<h1>ADD EMPLOYEE</h1>");
@@ -41,13 +43,13 @@ public class EmployeeFormServlet extends HttpServlet {
 			 Template.createEmphasizedText("PERSONAL INFORMATION") +
 			createTextFields(req) +
 			Template.createEmphasizedText("CONTACTS") +
-			Contact_RoleUI.askContacts(contacts, false) +
+			Contact_RoleUI.askContacts(new ArrayList<>(employee.getContacts()), false) +
 			Template.createEmphasizedText("CAREER INFORMATION") +
 			"<p style=\"display:inline-block;\">Currently Hired? &nbsp;</p>" +  
 			Template.createDropDown(hiredOptions, "currentlyHired", false) + "<br>" +
-			Template.createTextField("hireDate", validator.valueFiller(req, "hDate", ""), "Hire Date (yyyy-mm-dd)*") + "<br>" +
+			Template.createTextField("hireDate", validator.valueFiller(req, "hireDate", ""), "Hire Date (yyyy-mm-dd)*") + "<br>" +
 			Template.createEmphasizedText("ROLES") +
-			Contact_RoleUI.askRoles(roles) + "<br><br>" +
+			Contact_RoleUI.askRoles(new ArrayList<>(employee.getRoles())) + "<br><br>" +
 			Template.createSubmitBtn("addEmployeeBtn", "", "ADD EMPLOYEE") +
 			Template.createSubmitBtn("backBtn", "", "BACK") + "<br>" +
 			"<br></div>"
@@ -60,31 +62,45 @@ public class EmployeeFormServlet extends HttpServlet {
 		logMsgs.clear();
 	}
 
-	public void setContacts(Set<ContactDTO> contactSet) {
-		contacts = new ArrayList<ContactDTO>(contactSet);
+	private EmployeeDTO createEmployee(HttpServletRequest req) throws IOException, ServletException {
+		if(req.getSession().getAttribute("newEmp") == null) {
+			EmployeeDTO employee = new EmployeeDTO();
+			employee.setContacts(new HashSet<ContactDTO>());
+			employee.setRoles(new HashSet<RoleDTO>());
+			req.getSession().setAttribute("newEmp", employee);
+			return new EmployeeDTO();
+		}
+		return (EmployeeDTO) req.getSession().getAttribute("newEmp");
 	}
 
 	private void handleEvents(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+		EmployeeDTO employee = createEmployee(req);
+		List<ContactDTO> contacts = new ArrayList<>(employee.getContacts());
+		List<RoleDTO> roles = new ArrayList<>(employee.getRoles());
 		if (req.getParameter("addEmployeeBtn") != null) {
 			validator.saveEmployeeIfValid(logMsgs, contacts, roles, req, res, false);
 			validator.setHasSaved(true);
 		}
 		if(req.getParameter("backBtn") != null) {
-			roles.clear();
-			contacts.clear();
+			req.getSession().invalidate();
 			res.sendRedirect("home");
 		}	
 		if(req.getParameter("addContactBtn") != null) {
-			processAddContact(req.getParameter("conOpt"), req.getParameter("contact"));
+			processAddContact(contacts, req.getParameter("conOpt"), req.getParameter("contact"));
 		}
 		if(req.getParameter("addRoleBtn") != null){
-			processAddRole(Integer.parseInt(req.getParameter("roleOpt")));
+			processAddRole(roles, Integer.parseInt(req.getParameter("roleOpt")));
 		}
 		if(req.getParameter("delConBtn") != null) {
-			processDeleteContact(Integer.parseInt(req.getParameter("delConBtn")));
+			processDeleteContact(contacts, Integer.parseInt(req.getParameter("delConBtn")));
 		}
 		if(req.getParameter("delRoleBtn") != null) {
 			roles.remove(Integer.parseInt(req.getParameter("delRoleBtn")));
+		}
+		employee.setContacts(new HashSet<>(contacts));
+		employee.setRoles(new HashSet<>(roles));
+		if(!res.isCommitted()) {
+			req.getSession().setAttribute("newEmp", employee);
 		}
 	}
 
@@ -99,7 +115,7 @@ public class EmployeeFormServlet extends HttpServlet {
 		return sb.toString();
 	}
 
-	private void processAddContact(String contactType, String contactValue) {
+	private void processAddContact(List<ContactDTO> contacts, String contactType, String contactValue) {
 		if(contactType.equals(Contact_RoleUI.contactOptions[0]) && !Utils.isValidLandline(contactValue)) {
 			logMsgs.add(new LogMsg("Invalid Landline!", "red"));
 			return;
@@ -116,7 +132,7 @@ public class EmployeeFormServlet extends HttpServlet {
 		(contactType.equals(Contact_RoleUI.contactOptions[1])? "Mobile" : "Email"))  , contactValue));
 	}
 
-	private void processAddRole(int roleId) {
+	private void processAddRole(List<RoleDTO> roles, int roleId) {
 		RoleDTO role = new RoleDTO();
 		try {
 			role = EmployeeManager.getRole(roleId);
@@ -126,7 +142,7 @@ public class EmployeeFormServlet extends HttpServlet {
 		roles.add(role);
 	}
 
-	private void processDeleteContact(int index) {
+	private void processDeleteContact(List<ContactDTO> contacts, int index) {
 		if(contacts.size()==1) {
 			logMsgs.add(new LogMsg("Employee must have atleast one Contact!", "red"));
 			return;
