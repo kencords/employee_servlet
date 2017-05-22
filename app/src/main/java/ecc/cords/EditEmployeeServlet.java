@@ -85,6 +85,7 @@ public class EditEmployeeServlet extends HttpServlet {
 		List<ContactDTO> contacts = new ArrayList<>(employee.getContacts());
 		if(req.getParameter("saveEmployeeBtn") != null) {
 			validator.setEmployee(employee);
+			System.out.println(contacts);
 			validator.saveEmployeeIfValid(logMsgs, contacts, roles, req, res, true);
 			validator.setHasSaved(true);
 		}
@@ -109,9 +110,6 @@ public class EditEmployeeServlet extends HttpServlet {
 		}
 		if(req.getParameter("delRoleBtn") != null) {
 			EmployeeManager.deleteEmployeeRole(employee, roles.get(Integer.parseInt(req.getParameter("delRoleBtn"))));		
-		}
-		if(!res.isCommitted()) {
-			req.getSession().setAttribute("employee", employee);	
 		}
 	}
 
@@ -149,6 +147,7 @@ public class EditEmployeeServlet extends HttpServlet {
 			return;
 		}	
 		try {
+			System.out.println("index :" + index + " contact value: " + contacts.get(index).getContactValue());
 			EmployeeManager.deleteContact(employee, contacts.get(index));
 		} catch(Exception ex) {
 			ex.printStackTrace();

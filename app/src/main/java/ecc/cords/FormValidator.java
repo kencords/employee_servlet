@@ -92,6 +92,7 @@ public class FormValidator {
 		}
 		if(isEdit) {
 			logMsgs.add(EmployeeManager.updateEmployee(employee));
+			System.out.println("save: " + employee.getContacts());
 		}
 	}
 

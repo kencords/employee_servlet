@@ -99,9 +99,6 @@ public class EmployeeFormServlet extends HttpServlet {
 		}
 		employee.setContacts(new HashSet<>(contacts));
 		employee.setRoles(new HashSet<>(roles));
-		if(!res.isCommitted()) {
-			req.getSession().setAttribute("newEmp", employee);
-		}
 	}
 
 	private String createTextFields(HttpServletRequest req) {

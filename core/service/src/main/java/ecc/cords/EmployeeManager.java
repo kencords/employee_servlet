@@ -23,7 +23,7 @@ public class EmployeeManager{
 	}
 
 	public static LogMsg updateEmployee(EmployeeDTO employeeDTO) {
-		Employee employee = mapper.mapToEmployee(employeeDTO, true);
+		Employee employee = mapper.mapToEmployee(employeeDTO, false);
 		try {
 			daoService.updateElement(employee);
 		} catch(Exception exception) {
