@@ -10,6 +10,10 @@ public class DaoService{
 		dao.delete(e);
 	}
 
+	public void evictCollection(String role, Long owner) {
+		dao.evictCollection(role, owner);
+	}
+
 	public <E> List<E> getAllElements(final Class<E> type) {
 		return dao.getAll(type);
 	}

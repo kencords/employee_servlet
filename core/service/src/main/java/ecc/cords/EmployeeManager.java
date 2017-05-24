@@ -32,6 +32,21 @@ public class EmployeeManager{
 		}
 		return new LogMsg("Employee Updated Successfully!", "green");
 	}
+
+	public static LogMsg deleteEmployee(int empId) {
+		try {
+			Employee employee = getEmployee(empId);
+			for(Role role : employee.getRoles()) {
+				daoService.evictCollection("ecc.cords.Role.employees", role.getRoleId());
+			}
+			daoService.deleteElement(employee);
+		} catch(Exception ex) {
+			System.out.println("EmpID: " + empId);
+			ex.printStackTrace();
+			return new LogMsg("Cannot delete Employee " + empId + "!", "red");
+		}
+		return new LogMsg("Deleted Employee " + empId + "!", "green");
+	}
 	
 	public static EmployeeDTO addContact(EmployeeDTO employee, Set<ContactDTO> contacts) {
 		contacts.forEach(contact -> { 

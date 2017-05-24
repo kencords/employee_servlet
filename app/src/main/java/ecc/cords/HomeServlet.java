@@ -78,7 +78,7 @@ public class HomeServlet extends HttpServlet {
 			redirect(res, "employeeProfile?empId=" + req.getParameter("viewEmpBtn"));
 		}
 		if(req.getParameter("delEmpBtn") != null) {
-			processDeleteEmployee(Integer.parseInt(req.getParameter("delEmpBtn")));
+			logMsgs.add(EmployeeManager.deleteEmployee(Integer.parseInt(req.getParameter("delEmpBtn"))));
 		}
 		if(req.getParameter("sortBtn") != null) {
 			order = req.getParameter("sort");
@@ -91,17 +91,6 @@ public class HomeServlet extends HttpServlet {
 			logMsgs.clear();
 			redirect(res, "roles");
 		}
-	}
-
-	private void processDeleteEmployee(int empId) {
-		try {
-			daoService.deleteElement(EmployeeManager.getEmployee(empId));
-		} catch(Exception ex) {
-			System.out.println("EmpID: " + empId);
-			logMsgs.add(new LogMsg(EmployeeManager.getLogMsg(), "red"));
-			return;
-		}
-		logMsgs.add(new LogMsg("Deleted Employee " + empId + "!", "green"));
 	}
 
 	private void redirect(HttpServletResponse res, String dest) throws IOException, ServletException {

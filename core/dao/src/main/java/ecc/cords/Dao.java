@@ -31,6 +31,10 @@ public class Dao{
 	    session.close();
  	}
 
+ 	public void evictCollection(String role, Long owner) {
+ 		 HibernateUtil.getSessionFactory().evictCollection(role, owner);
+ 	}
+
 	public <T> T get(final long id, final Class<T> type) {
 		Session session = initSession();
 		T t = (T) session.get(type, id);
